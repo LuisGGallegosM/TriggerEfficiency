@@ -38,7 +38,7 @@ const std::vector<double> ptBinsLow=[]()
 const std::vector<double> ptBinsHigh=[]()
 {
     std::vector<double> out;
-    for(int i=3;i<105;i+=5) out.push_back(i);
+    for(double i=6.5;i<50;i+=1.5) out.push_back(i);
     return out;
 }();
 const std::vector<double> yBins { -2.4, -2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0,2.4 };

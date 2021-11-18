@@ -17,6 +17,7 @@ struct Input
     TTree* hltanalysisTree;
     TTree* hltobjectTree;
     bool isL1;
+    bool isDBmu;
 };
 
 const char oniaTreeName[]="hionia/myTree";

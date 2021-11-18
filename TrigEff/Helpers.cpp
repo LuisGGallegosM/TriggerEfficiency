@@ -24,10 +24,12 @@ bool isMatched(const TLorentzVector* recoMuon, const HltobjEntry* onMuons)
 
 bool isInAcceptance(float pt, float abseta)
 {
-    if (abseta > 2.4 ) return false;
-    if (abseta < 1.2 ) return pt >3.5;
-    if (abseta < 2.1 ) return pt >= 5.47-1.89*abseta;
-    return pt >1.5;
+    if (abseta < 1.6 ) return pt > 6.5;
+    return pt > 1.5;
+//    if (abseta > 2.4 ) return false;
+//    if (abseta < 1.2 ) return pt >3.5;
+//    if (abseta < 2.1 ) return pt >= 5.47-1.89*abseta;
+//    return pt >1.5;
 }
 
 bool isPassQualityCuts(const OniaInput* in, int index)

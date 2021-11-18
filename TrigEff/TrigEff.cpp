@@ -23,10 +23,10 @@ void TrigEff(const char* oniaFilename, const char* triggerFilename, const char* 
 {
     //open and create required files
     TFile* oniaFile = OpenFile(oniaFilename);
-    if (oniaFile==nullptr) return;
+    if (oniaFile==nullptr) {std::cout<<"No Onia Tree"<<std::endl; return;}
     
     TFile* triggerFile = OpenFile(triggerFilename);
-    if (triggerFile==nullptr) return;
+    if (triggerFile==nullptr) {std::cout<<"No Trigger file"<<std::endl; return;}
 
     std::string outFilename=outputFilename;
 
@@ -37,7 +37,9 @@ void TrigEff(const char* oniaFilename, const char* triggerFilename, const char* 
 
     //check if is L1 using the trigger name
     input.isL1=std::string(triggerName).find("HLT_HIL1")!= std::string::npos;
+    input.isDBmu=std::string(triggerName).find("Double")!= std::string::npos;
     if (input.isL1) std::cout <<"L1 trigger detected\n";
+    if (input.isDBmu) std::cout <<"Double muon trigger detected\n";
 
     input.oniaTree =OpenTree(oniaFile,oniaTreeName);
     input.hltanalysisTree=OpenTree(triggerFile,hltanalysisTreeName);
@@ -122,12 +124,27 @@ void Process(Input* input, Output* output)
         }
             
         const OniaInput* oniaInput = onia.readEntry(entry);
-        
-        for(int iMu=0;iMu<oniaInput->reco_mu_size;iMu++)
+        int object_size ;
+	object_size = input->isDBmu ?  oniaInput->reco_QQ_size : oniaInput->reco_mu_size;
+        for(int iMu=0;iMu< object_size;iMu++)
         {
-            const TLorentzVector* mu= input->isL1 ? 
+            const TLorentzVector* mu,* simu_pl,* simu_mi;
+	    if(!(input->isDBmu))
+	    {
+            mu= input->isL1 ? 
                     (TLorentzVector*) oniaInput->reco_mu_L1_mom4->At(iMu) 
                 :   (TLorentzVector*) oniaInput->reco_mu_mom4->At(iMu);
+	    }
+	    if(input->isDBmu)
+	    {
+            mu  =    (TLorentzVector*) oniaInput->reco_QQ_mom4->At(iMu);
+            simu_pl= input->isL1 ? 
+                    (TLorentzVector*) oniaInput->reco_mu_L1_mom4->At(oniaInput->reco_QQ_mupl_idx[iMu]) 
+                :   (TLorentzVector*) oniaInput->reco_mu_mom4->At(oniaInput->reco_QQ_mupl_idx[iMu]);
+            simu_mi= input->isL1 ? 
+                    (TLorentzVector*) oniaInput->reco_mu_L1_mom4->At(oniaInput->reco_QQ_mumi_idx[iMu]) 
+                :   (TLorentzVector*) oniaInput->reco_mu_mom4->At(oniaInput->reco_QQ_mumi_idx[iMu]);
+	    }
             
             const float pt= mu->Pt();
             const float y= mu->Rapidity();
@@ -135,10 +152,18 @@ void Process(Input* input, Output* output)
             const int cent= oniaInput->centrality;
 
             if (pt>100.0f) continue;
-
-            if (!isInAcceptance(pt,abs(eta))) continue;
-
-            if (!isPassQualityCuts(oniaInput,iMu)) continue;
+	    if(!(input->isDBmu))
+	    {
+                if (!isInAcceptance(pt,abs(eta))) continue;
+            
+                if (!isPassQualityCuts(oniaInput,iMu)) continue;
+	    }
+	    if(input->isDBmu)
+	    {
+                if (!(isInAcceptance((const float) simu_pl->Pt(),abs( (const float) simu_pl->Eta())) && isInAcceptance((const float) simu_pl->Pt(),abs( (const float) simu_pl->Eta())))) continue;
+            
+                if (!(isPassQualityCuts(oniaInput,oniaInput->reco_QQ_mumi_idx[iMu]) && isPassQualityCuts(oniaInput,oniaInput->reco_QQ_mupl_idx[iMu]))) continue;
+	    }
 
             //Passed acceptance and quality cuts
             total.output.pt=pt;
@@ -151,12 +176,22 @@ void Process(Input* input, Output* output)
             //read hltobj, if not found, continue
             const auto hltobjFound= indexer.find(oniaInput->event);
             if (hltobjFound== indexer.end()) continue;
-
-            if (isMatched(mu,&(hltobjFound->second)))
-            {
-                pass.output= total.output;
-                pass.writeEntry();
-            }
+	    if(!(input->isDBmu))
+	    {
+                if (isMatched(mu,&(hltobjFound->second)))
+                {
+                    pass.output= total.output;
+                    pass.writeEntry();
+                }
+	    }
+	    if(input->isDBmu)
+	    {
+                if (isMatched(simu_mi,&(hltobjFound->second)) && isMatched(simu_pl,&(hltobjFound->second)) )
+                {
+                    pass.output= total.output;
+                    pass.writeEntry();
+                }
+	    }
         }
     }
 
