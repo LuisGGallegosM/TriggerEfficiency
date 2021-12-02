@@ -8,11 +8,11 @@
 
 #include<iostream>
 
-void produceOutput(HistPair out, const std::string& outputpath);
-void produceOutput(Hist2Pair out, const std::string& outputpath);
-void readTotals(TFile* inputFile, Output* out);
-void readPass(TFile* inputFile, Output* output);
-Output allocateOutput(bool highPt);
+void produceOutput(HistPair out, const std::string& outputpath, const std::string& name);
+void produceOutput(Hist2Pair out, const std::string& outputpath, const std::string& name);
+void readTotals(TFile* inputFile, Output* out, const std::string& nameprefix);
+void readPass(TFile* inputFile, Output* output, const std::string& nameprefix);
+Output allocateOutput(bool highPt, const std::string& nameprefix);
 
 void PlotEff(const char* inputfilename, const char* outputFilename, const char* ptRange)
 {
@@ -29,25 +29,32 @@ void PlotEff(const char* inputfilename, const char* outputFilename, const char* 
     else
         std::cout << "in low pt range.\n";
 
-    Output output=allocateOutput(isHighPt);
+    Output outputs[2];
+    outputs[0].name="muon";
+    outputs[1].name="dimuon";
 
-    readTotals(inputFile,&output);
-    readPass(inputFile,&output);
+    for(Output& output : outputs )
+    {
+        output=allocateOutput(isHighPt,output.name);
 
-    produceOutput(output.y,outFilename);
-    produceOutput(output.pt,outFilename);
-    produceOutput(output.cent,outFilename);
-    produceOutput(output.pt_fwd,outFilename);
-    produceOutput(output.pt_mid,outFilename);
-    produceOutput(output.pt_y,outFilename);
+        readTotals(inputFile,&output,output.name);
+        readPass(inputFile,&output,output.name);
+
+        produceOutput(output.y,outFilename,"eff_"+output.name+"_y");
+        produceOutput(output.pt,outFilename,"eff_"+output.name+"_pt");
+        produceOutput(output.cent,outFilename,"eff_"+output.name+"_cent");
+        produceOutput(output.pt_fwd,outFilename,"eff_"+output.name+"_pt_fwd");
+        produceOutput(output.pt_mid,outFilename,"eff_"+output.name+"_pt_mid");
+        produceOutput(output.pt_y,outFilename,"eff_"+output.name+"_pt_y");
+    }
 
     delete inputFile;
     delete outputFile;
 }
 
-void readTotals(TFile* inputFile, Output* output)
+void readTotals(TFile* inputFile, Output* output, const std::string& nameprefix)
 {
-    TTree* oniaTreeTotal= OpenTree(inputFile,"total");
+    TTree* oniaTreeTotal= OpenTree(inputFile,nameprefix+"_total");
     Reader<OniaOutput> onia(oniaTreeTotal);
 
     Long64_t entries= oniaTreeTotal->GetEntries();
@@ -66,9 +73,9 @@ void readTotals(TFile* inputFile, Output* output)
     }
 }
 
-void readPass(TFile* inputFile, Output* output)
+void readPass(TFile* inputFile, Output* output, const std::string& nameprefix)
 {
-    TTree* oniaTreePass= OpenTree(inputFile,"pass");
+    TTree* oniaTreePass= OpenTree(inputFile,nameprefix+"_pass");
     Reader<OniaOutput> onia(oniaTreePass);
 
     Long64_t entries= oniaTreePass->GetEntries();
@@ -87,44 +94,45 @@ void readPass(TFile* inputFile, Output* output)
     }
 }
 
-Output allocateOutput(bool highPt)
+Output allocateOutput(bool highPt, const std::string& nameprefix)
 {
     Output out;
+    out.name=nameprefix;
     const std::vector<double>& ptBins= (highPt ? ptBinsHigh : ptBinsLow);
 
-    out.pt.den= createTH1("den_pt", "denominator vs pt", ptBins);
-    out.pt.num= createTH1("num_pt", "numerator vs pt",ptBins);
+    out.pt.den= createTH1(nameprefix+"_den_pt", "denominator vs pt", ptBins);
+    out.pt.num= createTH1(nameprefix+"_num_pt", "numerator vs pt",ptBins);
     out.pt.xlabel=histPtLabel;
 
-    out.y.den = createTH1("den_y", "denominator vs y",yBins);
-    out.y.num = createTH1("num_y", "numerator vs y",yBins);
+    out.y.den = createTH1(nameprefix+"_den_y", "denominator vs y",yBins);
+    out.y.num = createTH1(nameprefix+"_num_y", "numerator vs y",yBins);
     out.y.xlabel=histYLabel;
 
-    out.cent.num= createTH1("num_cent","denominator vs centrality",centBins);
-    out.cent.den= createTH1("den_cent","numerator vs centrality",centBins);
+    out.cent.num= createTH1(nameprefix+"_num_cent","denominator vs centrality",centBins);
+    out.cent.den= createTH1(nameprefix+"_den_cent","numerator vs centrality",centBins);
     out.cent.xlabel=histCentLabel;
 
-    out.pt_fwd.den= createTH1("den_pt_fwd", "forward : denominator vs pt", ptBins);
-    out.pt_fwd.num= createTH1("num_pt_fwd", "forward : numerator vs pt",ptBins);
+    out.pt_fwd.den= createTH1(nameprefix+"_den_pt_fwd", "forward : denominator vs pt", ptBins);
+    out.pt_fwd.num= createTH1(nameprefix+"_num_pt_fwd", "forward : numerator vs pt",ptBins);
     out.pt_fwd.xlabel=histPtLabel;
 
-    out.pt_mid.den= createTH1("den_pt_mid", "mid barrel: denominator vs pt", ptBins);
-    out.pt_mid.num= createTH1("num_pt_mid", "mid barrel: numerator vs pt",ptBins);
+    out.pt_mid.den= createTH1(nameprefix+"_den_pt_mid", "mid barrel: denominator vs pt", ptBins);
+    out.pt_mid.num= createTH1(nameprefix+"_num_pt_mid", "mid barrel: numerator vs pt",ptBins);
     out.pt_mid.xlabel=histPtLabel;
 
-    out.pt_y.den =createTH2("den_pt_y", "denominator vs pt,y",yBins,ptBins);
-    out.pt_y.num=createTH2("num_pt_y","numerator vs pt,y",yBins,ptBins);
+    out.pt_y.den =createTH2(nameprefix+"_den_pt_y", "denominator vs pt,y",yBins,ptBins);
+    out.pt_y.num=createTH2(nameprefix+"_num_pt_y","numerator vs pt,y",yBins,ptBins);
     out.pt_y.xlabel=histYLabel;
     out.pt_y.ylabel=histPtLabel;
 
     return out;
 }
 
-void produceOutput(HistPair out, const std::string& outputpath)
+void produceOutput(HistPair out, const std::string& outputpath, const std::string& name)
 {
     TEfficiency eff(*out.num,*out.den);
-    const std::string eff_name="eff_"+std::string(out.num->GetName()).substr(4);
-    eff.SetName(eff_name.data());
+    std::string n=out.num->GetName();
+    eff.SetName(name.data());
 
     const std::string outputfilename=outputpath+"/output";
     const char* ylabel= "";
@@ -138,11 +146,10 @@ void produceOutput(HistPair out, const std::string& outputpath)
     eff.Write();
 }
 
-void produceOutput(Hist2Pair out, const std::string& outputpath)
+void produceOutput(Hist2Pair out, const std::string& outputpath, const std::string& name)
 {
     TEfficiency eff(*out.num,*out.den);
-    const std::string eff_name="eff_"+std::string(out.num->GetName()).substr(4);
-    eff.SetName(eff_name.data());
+    eff.SetName(name.data());
 
     const std::string outputfilename=outputpath+"/output";
 

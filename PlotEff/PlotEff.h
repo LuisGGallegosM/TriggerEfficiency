@@ -27,6 +27,7 @@ struct Output
     HistPair pt_fwd;
     HistPair cent;
     Hist2Pair pt_y;
+    std::string name;
 };
 
 const std::vector<double> ptBinsLow=[]()

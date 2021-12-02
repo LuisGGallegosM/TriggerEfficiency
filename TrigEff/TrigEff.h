@@ -7,9 +7,13 @@
 
 struct Output
 {
-    TTree* total;
-    TTree* pass;
+    TTree* muontotal;
+    TTree* muonpass;
+    TTree* dimuontotal;
+    TTree* dimuonpass;
 };
+
+enum class OniaType { Upsilon, JPsi };
 
 struct Input
 {
@@ -17,7 +21,7 @@ struct Input
     TTree* hltanalysisTree;
     TTree* hltobjectTree;
     bool isL1;
-    bool isDBmu;
+    OniaType type;
 };
 
 const char oniaTreeName[]="hionia/myTree";

@@ -2,14 +2,15 @@
 #path to reco file
 ONIAFILEPATH="../rootfiles/datasets/trigger/OniaTree_Run3_2021_PG_0p5_3_merged.root"
 #path to hltobj triggers file
-TRIGGERFILEPATH="../rootfiles/datasets/trigger/HLT/HLT_MC_ParticleGun_Muon_Pt_0p5_3_1130pre5_v1.root"
+TRIGGERFILEPATH="../rootfiles/datasets/trigger/HLT/HLT_MC_ParticleGun_Muon_Pt_3_100_1130pre5_v1.root"
 #path to directory to place output
-OUTPUTPATH="../rootfiles/analysis/triggerStudy3"
+OUTPUTPATH="../rootfiles/analysis/triggerStudy"
 #reco file is low pt or high pt : "lowpt" or "highpt"
-PTRANGE="lowpt"
+PTRANGE="highpt"
+#type of onia for dimuons (for acceptance selection) : "JPsi" or "Y"
+ONIATYPE="JPsi"
 #maximum number of cores/threads to use simultaneusly, one core/thread process one trigger
 MAXJOBS=7
-
 
 #list of triggers to process, listed in file triggersLx.txt
 TRIGGERSL1=$( cat triggersL1.txt )
@@ -36,7 +37,7 @@ do
     OUTPATH="${OUTPUTDIR}/${TRIGGERNAME}"
     mkdir -p $OUTPATH
     echo "processing ${TRIGGERNAME}"
-    ./trigeff.sh ${ONIAFILEPATH} ${TRIGGERFILEPATH} ${TRIGGERNAME} $OUTPATH $PTRANGE &> "${OUTPATH}/output.log"  &
+    ./trigeff.sh ${ONIAFILEPATH} ${TRIGGERFILEPATH} ${TRIGGERNAME} $OUTPATH $PTRANGE $ONIATYPE &> "${OUTPATH}/output.log"  &
     JOBS=( $(jobs -p) )
     JOBNUM="${#JOBS[@]}"
     if [ $MAXJOBS = $JOBNUM ]
