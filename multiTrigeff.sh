@@ -1,8 +1,8 @@
 
 #path to reco file
-ONIAFILEPATH="../rootfiles/datasets/trigger/OniaTree_Run3_2021_PG_0p5_3_merged.root"
+ONIAFILEPATH="../rootfiles/datasets/trigger/Oniatree_Jpsi_CMSSW_11_3_2.root"
 #path to hltobj triggers file
-TRIGGERFILEPATH="../rootfiles/datasets/trigger/HLT/HLT_MC_ParticleGun_Muon_Pt_3_100_1130pre5_v1.root"
+TRIGGERFILEPATH="../rootfiles/datasets/trigger/HLT/openHLT_DileptMu_JPsi_v1.root"
 #path to directory to place output
 OUTPUTPATH="../rootfiles/analysis/triggerStudy"
 #reco file is low pt or high pt : "lowpt" or "highpt"

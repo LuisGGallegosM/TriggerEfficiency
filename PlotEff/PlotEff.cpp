@@ -30,22 +30,25 @@ void PlotEff(const char* inputfilename, const char* outputFilename, const char* 
         std::cout << "in low pt range.\n";
 
     Output outputs[2];
-    outputs[0].name="muon";
-    outputs[1].name="dimuon";
+    std::string names[2];
+    names[0]="muon";
+    names[1]="dimuon";
 
+    int i=0;
     for(Output& output : outputs )
     {
-        output=allocateOutput(isHighPt,output.name);
+        output=allocateOutput(isHighPt,names[i]);
 
         readTotals(inputFile,&output,output.name);
         readPass(inputFile,&output,output.name);
 
-        produceOutput(output.y,outFilename,"eff_"+output.name+"_y");
-        produceOutput(output.pt,outFilename,"eff_"+output.name+"_pt");
-        produceOutput(output.cent,outFilename,"eff_"+output.name+"_cent");
-        produceOutput(output.pt_fwd,outFilename,"eff_"+output.name+"_pt_fwd");
-        produceOutput(output.pt_mid,outFilename,"eff_"+output.name+"_pt_mid");
-        produceOutput(output.pt_y,outFilename,"eff_"+output.name+"_pt_y");
+        produceOutput(output.y,outFilename,output.name+"_eff_y");
+        produceOutput(output.pt,outFilename,output.name+"_eff_pt");
+        produceOutput(output.cent,outFilename,output.name+"_eff_cent");
+        produceOutput(output.pt_fwd,outFilename,output.name+"_eff_pt_fwd");
+        produceOutput(output.pt_mid,outFilename,output.name+"_eff_pt_mid");
+        produceOutput(output.pt_y,outFilename,output.name+"_eff_pt_y");
+        i++;
     }
 
     delete inputFile;
@@ -66,7 +69,7 @@ void readTotals(TFile* inputFile, Output* output, const std::string& nameprefix)
         output->cent.den->Fill(input->cent);
         output->y.den->Fill(input->y);
         output->pt_y.den->Fill(input->y,input->pt);
-        if (input->eta > endcapRap) 
+        if (fabs(input->eta) > endcapRap) 
             output->pt_fwd.den->Fill(input->pt);
         else
             output->pt_mid.den->Fill(input->pt);
